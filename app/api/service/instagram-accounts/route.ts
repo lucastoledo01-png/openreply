@@ -48,8 +48,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const header = req.headers.get("authorization") ?? "";
-  if (!serviceTokenMatches(header.replace(/^Bearer\s+/i, ""))) return unauthorized();
+  // The whole header, prefix included: `serviceTokenMatches` checks for
+  // "Bearer " itself and rejects anything without it. Stripping the prefix
+  // here made every call unauthorized.
+  if (!serviceTokenMatches(req.headers.get("authorization"))) return unauthorized();
 
   const parsed = BodySchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) {
@@ -173,8 +175,10 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const header = req.headers.get("authorization") ?? "";
-  if (!serviceTokenMatches(header.replace(/^Bearer\s+/i, ""))) return unauthorized();
+  // The whole header, prefix included: `serviceTokenMatches` checks for
+  // "Bearer " itself and rejects anything without it. Stripping the prefix
+  // here made every call unauthorized.
+  if (!serviceTokenMatches(req.headers.get("authorization"))) return unauthorized();
 
   const contas = await prisma.instagramAccount.findMany({
     select: {
