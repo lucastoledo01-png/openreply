@@ -170,11 +170,20 @@ export async function POST(request: NextRequest) {
       })();
 
   if (!workspace) {
+    // The count turns one ambiguous message into two actionable ones. Zero
+    // means nobody has signed in yet, since the workspace is created on first
+    // sign-in; more than one means the caller has to choose. The old wording
+    // covered both and helped with neither.
+    const total = await prisma.workspace.count();
+
     return NextResponse.json(
       {
         success: false,
+        workspaceCount: total,
         error:
-          "Could not resolve a workspace. Pass workspaceId when this instance has more than one.",
+          total === 0
+            ? "No workspace exists yet. Sign in to OpenReply once to create one, then retry."
+            : `Found ${total} workspaces. Pass workspaceId to choose one.`,
       },
       { status: 400 },
     );
