@@ -189,6 +189,21 @@ export async function GET(req: NextRequest) {
   // here made every call unauthorized.
   if (!serviceTokenMatches(req.headers.get("authorization"))) return unauthorized();
 
+  // Workspaces vão junto: quando existe mais de um, o POST recusa e pede um
+  // `workspaceId`, e sem esta lista o chamador não tem de onde tirar o valor.
+  // Descobrir isso exigia acesso ao banco, que é justamente o que a rota de
+  // serviço existe para dispensar.
+  const workspaces = await prisma.workspace.findMany({
+    select: {
+      id: true,
+      name: true,
+      createdAt: true,
+      owner: { select: { email: true } },
+      _count: { select: { instagramAccounts: true, automations: true } },
+    },
+    orderBy: { createdAt: "asc" },
+  });
+
   const contas = await prisma.instagramAccount.findMany({
     select: {
       id: true,
@@ -201,5 +216,5 @@ export async function GET(req: NextRequest) {
     orderBy: { connectedAt: "desc" },
   });
 
-  return NextResponse.json({ success: true, accounts: contas });
+  return NextResponse.json({ success: true, workspaces, accounts: contas });
 }
