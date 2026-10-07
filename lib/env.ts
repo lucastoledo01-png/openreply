@@ -72,6 +72,33 @@ export function isEmailAllowedToSignIn(
   return allowed.includes(email.toLowerCase());
 }
 
+/**
+ * Optional private mode.
+ *
+ * With HIDE_MARKETING_PAGES=true the landing page and the marketing pages
+ * send visitors to the login screen instead, for an instance run only by its
+ * own team. Privacy, terms, data deletion and the Meta review page stay public
+ * because the Meta app links to them.
+ */
+export function isMarketingHidden(): boolean {
+  return (process.env.HIDE_MARKETING_PAGES ?? "").trim().toLowerCase() === "true";
+}
+
+const MARKETING_PREFIXES = [
+  "/comment-link-automation",
+  "/instagram-comment-to-dm-templates",
+  "/instagram-dm-automation-agencies",
+  "/manychat-alternative",
+  "/templates",
+];
+
+export function isMarketingPath(pathname: string): boolean {
+  if (pathname === "/") return true;
+  return MARKETING_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+}
+
 export const serverEnvSchema = z.object({
   NEXTAUTH_URL: z.string().url(),
   NEXTAUTH_SECRET: z.string().min(16),

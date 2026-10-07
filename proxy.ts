@@ -1,6 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { isMarketingHidden, isMarketingPath } from "@/lib/env";
 
-const PROTECTED_PREFIXES = ["/dashboard", "/automations", "/logs", "/settings"];
+const PROTECTED_PREFIXES = [
+  "/dashboard",
+  "/automations",
+  "/campaigns",
+  "/diagnostics",
+  "/inbox",
+  "/logs",
+  "/overview",
+  "/settings",
+];
 
 function hasSessionCookie(request: NextRequest): boolean {
   return (
@@ -19,6 +29,11 @@ export function proxy(request: NextRequest) {
   const isLogin = pathname === "/login";
   const isAuthenticated = hasSessionCookie(request);
 
+  if (isMarketingHidden() && isMarketingPath(pathname)) {
+    const target = isAuthenticated ? "/dashboard" : "/login";
+    return NextResponse.redirect(new URL(target, request.url));
+  }
+
   if (isProtected && !isAuthenticated) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
@@ -34,10 +49,20 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
+    "/",
     "/dashboard/:path*",
     "/automations/:path*",
+    "/campaigns/:path*",
+    "/diagnostics/:path*",
+    "/inbox/:path*",
     "/logs/:path*",
+    "/overview/:path*",
     "/settings/:path*",
     "/login",
+    "/comment-link-automation/:path*",
+    "/instagram-comment-to-dm-templates/:path*",
+    "/instagram-dm-automation-agencies/:path*",
+    "/manychat-alternative/:path*",
+    "/templates/:path*",
   ],
 };
