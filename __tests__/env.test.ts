@@ -3,6 +3,8 @@ import {
   getEncryptionKeyHex,
   getMetaGraphApiVersion,
   isEmailAllowedToSignIn,
+  isMarketingHidden,
+  isMarketingPath,
   requireEnv,
 } from "../lib/env";
 
@@ -58,5 +60,28 @@ describe("sign-in allowlist", () => {
     expect(isEmailAllowedToSignIn(null)).toBe(false);
     expect(isEmailAllowedToSignIn(undefined)).toBe(false);
     expect(isEmailAllowedToSignIn("")).toBe(false);
+  });
+});
+
+describe("private mode", () => {
+  it("keeps marketing pages public unless HIDE_MARKETING_PAGES is true", () => {
+    expect(isMarketingHidden()).toBe(false);
+    vi.stubEnv("HIDE_MARKETING_PAGES", "yes");
+    expect(isMarketingHidden()).toBe(false);
+    vi.stubEnv("HIDE_MARKETING_PAGES", " TRUE ");
+    expect(isMarketingHidden()).toBe(true);
+  });
+
+  it("hides the landing and marketing pages only", () => {
+    expect(isMarketingPath("/")).toBe(true);
+    expect(isMarketingPath("/templates")).toBe(true);
+    expect(isMarketingPath("/templates/giveaway")).toBe(true);
+    expect(isMarketingPath("/manychat-alternative")).toBe(true);
+    expect(isMarketingPath("/privacy")).toBe(false);
+    expect(isMarketingPath("/terms")).toBe(false);
+    expect(isMarketingPath("/data-deletion")).toBe(false);
+    expect(isMarketingPath("/meta-review")).toBe(false);
+    expect(isMarketingPath("/login")).toBe(false);
+    expect(isMarketingPath("/templatesx")).toBe(false);
   });
 });
